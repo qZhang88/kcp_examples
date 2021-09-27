@@ -34,7 +34,7 @@ void loop(kcpObj *send)
     if(n < 0)  // 检测是否有UDP数据包: kcp头部+data
       continue;
 
-    printf("UDP recv data: size = %d, buf = %s\n", n, buf+24);
+    printf("UDP recv data: size = %d, buf = %s\n", n, buf+24+24);
 
     // 预接收数据: 调用ikcp_input将裸数据交给KCP
     // kcp接收到下层协议传进来的数据底层数据buffer转换成kcp的数据包格式
