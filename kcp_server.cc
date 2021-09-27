@@ -34,7 +34,7 @@ void loop(kcpObj *send)
     if(n < 0)  // 检测是否有UDP数据包: kcp头部+data
       continue;
 
-    printf("UDP接收到数据包  大小= %d   buf =%s\n", n, buf+24);
+    printf("UDP recv data: size = %d, buf = %s\n", n, buf+24);
 
     // 预接收数据: 调用ikcp_input将裸数据交给KCP
     // kcp接收到下层协议传进来的数据底层数据buffer转换成kcp的数据包格式
@@ -55,7 +55,7 @@ void loop(kcpObj *send)
         break;
     }
 
-    printf("数据交互  ip = %s  port = %d\n",
+    printf("data recv: ip = %s, port = %d\n",
            inet_ntoa(send->addr.sin_addr), ntohs(send->addr.sin_port));
 
     if(strcmp(buf, "Conn") == 0)
@@ -67,14 +67,14 @@ void loop(kcpObj *send)
       // 应该是在kcp_update里面加封kcp头部数据
       // ikcp_send把要发送的buffer分片成KCP的数据包格式，插入待发送队列中。
       ret = ikcp_send(send->kcp, msg, (int)sizeof(msg));
-      printf("Server reply -> 内容[%s] 字节[%d] ret = %d\n",
+      printf("Server reply -> 内容[%s], 字节[%d] ret = %d\n",
              msg, (int)sizeof(msg), ret);
 
       number++;
-      printf("第[%d]次发\n",number);
+      printf("第[%d]次发\n", number);
     }
 
-    if(strcmp(buf,"Client:Hello!") == 0)
+    if(strcmp(buf, "Client: Hello!") == 0)
     {
       printf("[Hello]  Data from Client-> %s\n", buf);
 
@@ -82,6 +82,8 @@ void loop(kcpObj *send)
       number++;
       printf("第[%d]次发\n", number);
     }
+    else
+      printf("[Hello]  Data from Client-> %s\n", buf);
   }
 }
 
@@ -98,20 +100,19 @@ int main(int argc, char *argv[])
   send.is_server = true;
   send.port = atoi(argv[1]);
 
-  bzero(send.buff, sizeof(send.buff));
+  // bzero(send.buff, sizeof(send.buff));
   char msg[] = "Server: Hello!";   //与客户机后续交互
   memcpy(send.buff, msg, sizeof(msg));
 
   //创建kcp对象把send传给kcp的user变量
   ikcpcb *kcp = ikcp_create(0x1, (void *)&send);
-  kcp->output = udp_output;           //设置kcp对象的回调函数
-  ikcp_nodelay(kcp, 0, 10, 0, 0);    //1, 10, 2, 1
+  kcp->output = udp_output;           // 设置kcp对象的回调函数
+  ikcp_nodelay(kcp, 0, 10, 0, 0);     // 1, 10, 2, 1
   ikcp_wndsize(kcp, 128, 128);
   send.kcp = kcp;
 
   init(&send);    // init server socket
 
-  //循环处理
   loop(&send);
 
   return 0;

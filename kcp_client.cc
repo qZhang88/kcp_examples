@@ -34,7 +34,7 @@ void loop(kcpObj *send)
     if(n < 0)  // 检测是否有UDP数据包: kcp头部+data
       continue;
 
-    printf("UDP接收到数据包  大小= %d   buf =%s\n", n, buf+24);
+    printf("UDP recv data: size = %d, buf = %s\n", n, buf+24);
 
     // 预接收数据: 调用ikcp_input将裸数据交给KCP
     // kcp接收到下层协议传进来的数据底层数据buffer转换成kcp的数据包格式
@@ -55,7 +55,7 @@ void loop(kcpObj *send)
         break;
     }
 
-    printf("数据交互  ip = %s  port = %d\n",
+    printf("data recv: ip = %s, port = %d\n",
            inet_ntoa(send->addr.sin_addr), ntohs(send->addr.sin_port));
 
     if(strcmp(buf, "Conn-OK") == 0)
@@ -63,14 +63,14 @@ void loop(kcpObj *send)
       printf("Data from Server-> %s\n", buf);
 
       ret = ikcp_send(send->kcp, send->buff, sizeof(send->buff) );
-      printf("Client reply -> 内容[%s] 字节[%d]  ret = %d\n",
+      printf("Client reply -> 内容[%s], 字节[%d]  ret = %d\n",
              send->buff, (int)sizeof(send->buff), ret);
       number++;
       printf("第[%d]次发\n", number);
     }
 
     //发消息
-    if(strcmp(buf,"Server:Hello!") == 0)
+    if(strcmp(buf, "Server: Hello!") == 0)
     {
       printf("Data from Server-> %s\n", buf);
 
@@ -78,6 +78,8 @@ void loop(kcpObj *send)
       number++;
       printf("第[%d]次发\n", number);
     }
+    else
+      printf("!!! Data from Server-> %s\n", buf);
   }
 }
 
@@ -102,7 +104,7 @@ int main(int argc, char *argv[])
   // 创建kcp对象把send传给kcp的user变量, TODO: user变量更新
   ikcpcb *kcp = ikcp_create(0x1, (void *)&send);
   kcp->output = udp_output;              // 设置kcp对象的回调函数
-  ikcp_nodelay(kcp,0, 10, 0, 0);        // 1, 10, 2, 1
+  ikcp_nodelay(kcp,0, 10, 0, 0);         // 1, 10, 2, 1
   ikcp_wndsize(kcp, 128, 128);
   send.kcp = kcp;
 
@@ -110,7 +112,7 @@ int main(int argc, char *argv[])
 
   char init_msg[] = "Conn";                //与服务器初次通信
   int  ret = ikcp_send(send.kcp, init_msg, (int)sizeof(init_msg));
-  printf("ikcp_send: [%s] len=%d ret = %d\n",
+  printf("ikcp_send: [%s] len=%d, ret = %d.\n",
          init_msg, (int)sizeof(init_msg), ret);   //发送成功的
 
   loop(&send);
