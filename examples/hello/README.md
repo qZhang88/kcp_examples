@@ -68,7 +68,7 @@ Data from Server-> Server: Hello!
 
 **NOTE**
 
-First udp length is 24 + data len, if kcp kept been recv it will become 24 + 24 + data len, unless send not recieved, like if you killed client first, server will output like this.
+First udp length is 24 + data len, if kcp kept been recv it will become 24 + 24 + data len, the first 24 is for ACK. When not recieving kcp, like if you killed client first, server will output like this.
 
 ```bash
 第[3]次发

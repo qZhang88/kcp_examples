@@ -38,10 +38,8 @@ void loop(kcpObj *send)
     // kcp接收到下层协议传进来的数据底层数据buffer转换成kcp的数据包格式
     // 这些数据有可能是KCP控制报文，并不是我们要的数据。
     ret = ikcp_input(send->kcp, buf, n);
-
     if(ret < 0)//检测ikcp_input对 buf 是否提取到真正的数据
     {
-      // printf("ikcp_input error ret = %d\n",ret);
       continue;
     }
 

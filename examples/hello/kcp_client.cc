@@ -16,7 +16,6 @@ void loop(kcpObj *send)
   {
     isleep(1);
 
-    // ikcp_update不是调用一次两次就起作用, 要loop调用
     // ikcp_update包含ikcp_flush, 将发送队列中的数据通过下层协议进行发送
     ikcp_update(send->kcp, iclock());
 
@@ -25,26 +24,18 @@ void loop(kcpObj *send)
     // 处理收消息
     n = recvfrom(send->sockfd, buf, BUF_SIZE, MSG_DONTWAIT,
                  (struct sockaddr *) &send->addr, &len);
-
-    if(n < 0)  // 检测是否有UDP数据包: kcp头部+data
+    if(n < 0)     // 检测是否有UDP数据包: kcp头部+data
       continue;
-
-    printf("UDP recv: size = %d, buf = %s\n", n, buf+24);
 
     // 预接收数据: 调用ikcp_input将裸数据交给KCP
     // kcp接收到下层协议传进来的数据底层数据buffer转换成kcp的数据包格式
     // 这些数据有可能是KCP控制报文，并不是我们要的数据。
     ret = ikcp_input(send->kcp, buf, n);
-
-    if(ret < 0)//检测ikcp_input对 buf 是否提取到真正的数据
-    {
-      // printf("ikcp_input error ret = %d\n",ret);
+    if(ret < 0)   // 检测ikcp_input对 buf 是否提取到真正的数据
       continue;
-    }
 
     while(1)
     {
-      //kcp将接收到的kcp数据包还原成之前kcp发送的buffer数据
       ret = ikcp_recv(send->kcp, buf, n);
       if(ret < 0)  //检测ikcp_recv提取到的数据
         break;
