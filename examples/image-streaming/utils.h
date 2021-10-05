@@ -82,10 +82,6 @@ static inline void isleep(unsigned long millisecond)
   #endif
 }
 
-#ifndef BUF_SIZE
-#define BUF_SIZE  512
-#endif
-
 typedef struct {
   bool is_server;
   unsigned char *ipstr;
@@ -93,7 +89,6 @@ typedef struct {
   ikcpcb *kcp;
   int sockfd;
   struct sockaddr_in addr;        // addr for sendto and recvfrom
-  char buff[128];
 } kcpObj;
 
 int udp_output(const char *buf, int len, ikcpcb *kcp, void *user) {
@@ -102,7 +97,7 @@ int udp_output(const char *buf, int len, ikcpcb *kcp, void *user) {
       (struct sockaddr *) &send->addr, sizeof(struct sockaddr_in));
   if (n >= 0)
   {
-    printf("udp_output: %d bytes content: [%s]\n", n, buf + 24);  // 24字节的KCP头部
+    printf("udp_output: %d bytes send\n", n);  // 24字节的KCP头部
     return n;
   }
   else

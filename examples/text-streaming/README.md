@@ -1,4 +1,6 @@
-# Example: send hello!
+# Example: text streaming
+
+Using KCP to keep sending command from client to server.
 
 **Complie**
 ```bash
