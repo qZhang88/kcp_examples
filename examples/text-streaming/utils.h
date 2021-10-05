@@ -7,6 +7,9 @@
 #include <ctype.h>
 #include <string.h>
 
+#include <sys/socket.h>
+#include <arpa/inet.h>
+
 #include "ikcp.h"
 
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
@@ -90,7 +93,6 @@ typedef struct {
   ikcpcb *kcp;
   int sockfd;
   struct sockaddr_in addr;        // addr for sendto and recvfrom
-  char buff[128];
 } kcpObj;
 
 int udp_output(const char *buf, int len, ikcpcb *kcp, void *user) {
