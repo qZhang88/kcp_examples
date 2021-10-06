@@ -83,7 +83,7 @@ static inline void isleep(unsigned long millisecond)
 }
 
 #ifndef BUF_SIZE
-#define BUF_SIZE  512
+#define BUF_SIZE  1024
 #endif
 
 typedef struct {

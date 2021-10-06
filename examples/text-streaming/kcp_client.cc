@@ -13,7 +13,7 @@ void loop(kcpObj *send)
   unsigned int len = sizeof(struct sockaddr_in);
   int n, ret;
   bool start = false;
-  char msg[64];
+  char msg[800];
 
   while(1)
   {
@@ -56,7 +56,7 @@ void loop(kcpObj *send)
     if (start)
     {
       number++;
-      sprintf(msg, "[%d]COMMAND: ", number);
+      sprintf(msg, "[%d]COMMAND", number);
       ret = ikcp_send(send->kcp, msg, (int)sizeof(msg));
       printf("\n第[%d]次发\n", number);
     }

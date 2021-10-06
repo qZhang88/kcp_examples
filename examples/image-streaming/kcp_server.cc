@@ -8,7 +8,8 @@
 
 using namespace std;
 
-#define BUF_SIZE 4000000    // max 255 * 1400, 255 is max ikcp_send package count
+#define UDP_BUF_SIZE 1600
+#define KCP_BUF_SIZE 4000000    // max 255 * 1400, 255 is max ikcp_send package count
 
 static int number = 0;
 
@@ -16,43 +17,54 @@ void loop(kcpObj *send)
 {
   unsigned int len = sizeof(struct sockaddr_in);
   int n, ret;
-  char buf[BUF_SIZE]={0};
+  int udp_count = 0;
 
   cv::namedWindow("recv", cv::WINDOW_AUTOSIZE);
 
   while(1)
   {
+    // kcp process
     isleep(1);
     ikcp_update(send->kcp, iclock());
 
-    bzero(buf, sizeof(buf));
+    char buf[KCP_BUF_SIZE]={0};
+    int udp_len = 0;
 
     while (1) {
-      n = recvfrom(send->sockfd, buf, BUF_SIZE, MSG_DONTWAIT,
-                 (struct sockaddr *) &send->addr, &len);
-      if (n < 0) break;
-      // 如果 p2收到udp，则作为下层协议输入到kcp2
-      number++;
-      printf("第[%d]个udp\n", number);
-      ikcp_input(send->kcp, buf, n);
+      n = recvfrom(send->sockfd, buf, UDP_BUF_SIZE, MSG_DONTWAIT,
+                   (struct sockaddr *) &send->addr, &len);
+      if (n < 0)
+        break;
+
+      udp_count++;
+      udp_len += n;
+      printf("udp recv: [%d] %d bytes\n", udp_count, n);
+      ret = ikcp_input(send->kcp, buf, n);
+      printf("ikcp_input result: [%d]\n", ret);
     }
 
-    ret = ikcp_input(send->kcp, buf, n);
-    if(ret < 0)    // 检测ikcp_input对 buf 是否提取到真正的数据
-    {
+    if (udp_len == 0)
       continue;
-    }
+    else
+      printf("udp loop recv: %d bytes\n", udp_len);
 
     while(1)
     {
-      ret = ikcp_recv(send->kcp, buf, n);
-      if(ret < 0)  // 检测ikcp_recv提取到的数据
+      ret = ikcp_recv(send->kcp, buf, KCP_BUF_SIZE);
+      if(ret < 0)  //检测ikcp_recv提取到的数据
         break;
+
+      printf("ikcp_recv: result [%d]\n", ret);
+      cv::Mat rawData = cv::Mat(1, ret, CV_8UC1, buf);
+      cv::Mat frame = cv::imdecode(rawData, cv::IMREAD_COLOR);
+      if (frame.size().width == 0) {
+          cerr << "decode failure!" << endl;
+          continue;
+      }
+      cv::imshow("recv", frame);
+      cv::waitKey(1);
     }
-
-    // printf("KCP recv: ip = %s, port = %d, buf size = %d\n",
-    //        inet_ntoa(send->addr.sin_addr), ntohs(send->addr.sin_port), n);
-
+    printf("\n");
   }
 }
 
@@ -73,10 +85,10 @@ int main(int argc, char *argv[])
   ikcpcb *kcp = ikcp_create(0x1, (void *)&send);
   kcp->output = udp_output;           // 设置kcp对象的回调函数
   ikcp_nodelay(kcp, 1, 10, 2, 1);
-  ikcp_wndsize(kcp, 128, 128);
+  ikcp_wndsize(kcp, 1024, 1024);
   send.kcp = kcp;
 
-  init(&send);    // init server socket
+  init(&send);                       // init server socket
   loop(&send);
 
   return 0;
