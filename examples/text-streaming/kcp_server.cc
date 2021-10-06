@@ -4,6 +4,7 @@
 #include "ikcp.c"
 #include "utils.h"
 
+#define KCP_BUF_SIZE 4000
 
 static int number = 0;
 
@@ -46,7 +47,7 @@ void loop(kcpObj *send)
     while(1)
     {
       //kcp将接收到的kcp数据包还原成之前kcp发送的buffer数据
-      ret = ikcp_recv(send->kcp, buf, n);
+      ret = ikcp_recv(send->kcp, buf, KCP_BUF_SIZE);
       if(ret < 0)  //检测ikcp_recv提取到的数据
         break;
     }
